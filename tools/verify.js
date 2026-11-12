@@ -59,7 +59,15 @@ function check(name, pass, detail) {
 
 (async () => {
   const compareArg = process.argv.indexOf('--compare');
-  const comparePath = compareArg > -1 ? process.argv[compareArg + 1] : null;
+  // 未显式指定时，自动使用桌面上的原始单文件（存在即比对）——
+  // 这是最强的回归判据：拆分后正文必须与原文件逐字一致。
+  const DEFAULT_ORIG = 'C:/Users/EDY/Desktop/博雅博物馆_优秀案例解读_点击放大互动版_2026-11-02.html';
+  const comparePath = compareArg > -1
+    ? process.argv[compareArg + 1]
+    : (fs.existsSync(DEFAULT_ORIG) ? DEFAULT_ORIG : null);
+  if (comparePath) {
+    console.log(`对比基准：${comparePath}`);
+  }
 
   const { srv, port } = await serve(SITE);
   const base = `http://127.0.0.1:${port}`;
