@@ -1,0 +1,24 @@
+{
+	// Cloudflare Workers 静态资源部署配置（assets-only Worker）
+	//
+	// 为什么需要它：
+	//   Cloudflare 已把「创建应用」的默认流程改为 Workers，Pages 降级为「旧版工作流」。
+	//   本文件让仓库同时兼容两条路线 —— 走 Workers 时无需任何额外配置即可部署。
+	//
+	// 用途：Workers Builds 的 Deploy command 执行 `npx wrangler deploy` 时读取本文件。
+	//   · assets-only Worker（无 main 字段）→ 不需要任何 JS Worker 脚本
+	//   · assets.directory 指向构建产物 site/（由 tools/build_cloud.sh 生成）
+	//   · not_found_handling = "404-page" → 未匹配路径返回我们的 404.html
+	//
+	// 名称约束：这里的 name 必须与 Cloudflare 后台里的 Worker 名称一致，
+	//   否则构建会失败（官方明确要求）。仓库名与 Worker 名均为 museum-site。
+	//
+	// 注意：走 Pages 路线时本文件会被忽略，不影响部署。
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "museum-site",
+	"compatibility_date": "2026-11-12",
+	"assets": {
+		"directory": "./site",
+		"not_found_handling": "404-page"
+	}
+}
