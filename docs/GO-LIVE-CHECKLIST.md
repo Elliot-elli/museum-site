@@ -1,11 +1,11 @@
 # 上线操作清单（GitHub + Cloudflare Pages）
 
 > 按顺序做，每步都有「做完怎么确认」。
-> 全程约 15 分钟。
+> 全程约 15 分钟，**其中只有 2 步需要你动手**（建仓 + 连接 Cloudflare）。
 
 ---
 
-## 步骤 1 · 把 SSH 公钥贴到 GitHub（一次性，2 分钟）
+## 步骤 1 · 把 SSH 公钥贴到 GitHub（一次性，2 分钟）✅ 已完成
 
 ### 1.1 复制公钥
 
@@ -26,8 +26,6 @@ ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIVgw+VaRHzPh0jG+porxXzpJpxDDDZ1lNZD7ySLPIF/
 
 ### 1.3 确认成功
 
-回到终端，在项目目录执行：
-
 ```bash
 cd C:/Users/EDY/WorkBuddy/boya-museum-site
 ssh -T git@github.com
@@ -43,9 +41,11 @@ Hi Elliot-elli! You've successfully authenticated, but GitHub does not provide s
 
 ---
 
-## 步骤 2 · 创建 GitHub 仓库（1 分钟）
+## 步骤 2 · 创建 GitHub 仓库（30 秒，**需你手动**）
 
-### 2.1 建仓
+> ⚠️ 为什么必须手动：WorkBuddy 的 GitHub 连接器用的是 GitHub App token，
+> 权限只覆盖「读写已有仓库」，**没有创建仓库的权限**（API 返回 403
+> `Resource not accessible by integration`）。SSH 也无法建仓，只能推送到已存在的仓库。
 
 1. 打开 <https://github.com/new>
 2. **Owner**：`Elliot-elli`
@@ -55,40 +55,34 @@ Hi Elliot-elli! You've successfully authenticated, but GitHub does not provide s
 6. ⚠️ **不要勾** "Add .gitignore" / "Choose a license"
 7. 点 **Create repository**
 
-### 2.2 确认成功
+建完会跳到一个空仓库页面，直接**回来告诉我一声**，我接着推送。
 
-```bash
-cd C:/Users/EDY/WorkBuddy/boya-museum-site
-git ls-remote --heads origin
-```
-
-**期望**：能看到 `refs/heads/main`（说明 SSH 认证 + 仓库地址都对）
-
-> ⚠️ 此时远程还是空仓库（`git ls-remote` 无输出也是正常的），
-> 真正的推送在步骤 3。
+> 建仓后想改描述/主页，随时可以在仓库页右上角 ⚙ → General 里改，
+> 或我也可以通过 API 帮你改。
 
 ---
 
-## 步骤 3 · 推送代码（1 分钟）
+## 步骤 3 · 推送代码（1 分钟，**我代办**）
 
 ```bash
 cd C:/Users/EDY/WorkBuddy/boya-museum-site
-git push -u origin main
+bash tools/setup_github.sh
 ```
+
+脚本会依次：测 SSH → 查 git 配置 → 检查仓库状态 → 配 remote → 推送 → 验证远程分支。
 
 **期望**：
 
 ```
-To github.com:Elliot-elli/museum-site.git
- * [new branch]      main -> main
+  [OK ] SSH 认证通过
+  [OK ] 远程分支已存在：main
 ```
 
-### 确认成功
+### 手动确认
 
 ```bash
-# 远程应有 3 个提交
 git ls-remote --heads origin
-# 打开 https://github.com/Elliot-elli/museum-site 应能看到 src/ tools/ docs/ 和 README
+# 应能看到 refs/heads/main
 ```
 
 > 仓库里**没有** `site/` 目录 —— 这是设计如此（构建产物，不入库）。
@@ -96,7 +90,7 @@ git ls-remote --heads origin
 
 ---
 
-## 步骤 4 · 连接 Cloudflare Pages（5 分钟）
+## 步骤 4 · 连接 Cloudflare Pages（5 分钟，**需你手动**）
 
 ### 4.1 登录
 
@@ -106,6 +100,7 @@ git ls-remote --heads origin
 
 1. 左侧边栏 → **Workers 和 Pages** → **创建** → **Pages** → **连接到 Git**
 2. 选 **GitHub** → 授权 → 在 GitHub 上勾选 **`museum-site`** 仓库 → 安装
+   （授权时如果 GitHub 问权限，勾 **Administration: Read-only** 和 **Contents: Read-only** 即可）
 3. 回到 Cloudflare，选中 `museum-site` 仓库 → **开始部署**
    （首次会先用默认设置部署一次，**没关系**，下一步会改）
 
