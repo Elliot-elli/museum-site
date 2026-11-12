@@ -90,6 +90,22 @@ def selfcheck() -> list[str]:
         if n != 3:
             problems.append(f"data.js 案例数异常：{n}")
 
+    # 5. editorData 基线一致性
+    #    editorData.originals 的键是「DOM 叶子序号」（case0:34 这种），
+    #    正文增删标签会让序号整体错位 → 「恢复原文」静默恢复成错位内容。
+    #    这是静默故障（不报错），所以必须在构建阶段拦住。
+    if idx.exists():
+        try:
+            rc = subprocess.run(
+                [sys.executable, str(HERE / "check_editor_baseline.py"), "--site"],
+                capture_output=True, text=True,
+            )
+            if rc.returncode != 0:
+                problems.append("editorData 基线不一致 —— 见 tools/check_editor_baseline.py 的输出")
+                print(rc.stdout)
+        except Exception as e:  # noqa: BLE001
+            problems.append(f"基线检查脚本执行异常：{e}")
+
     return problems
 
 

@@ -34,7 +34,8 @@ boya-museum-site/
 │   ├── make_platform_files.py  生成 _headers / _redirects
 │   ├── verify.js          功能验证（真实 Chromium）
 │   ├── verify_viewports.js 多视口验证
-│   └── verify_live.js     公网验收（打线上地址，9 项）
+│   ├── verify_live.js     公网验收（打线上地址，9 项）
+│   └── check_editor_baseline.py 基线一致性检查（已接入 build.py 自检）
 │
 └── docs/
     ├── DEPLOY.md           部署手册
@@ -116,9 +117,14 @@ node tools/verify.js --compare "C:/Users/EDY/Desktop/博雅博物馆_优秀案�
 
 # 公网验收（9 项：直接打线上地址，含导出 HTML 独立打开 + 移动视口）
 node tools/verify_live.js "https://museum-site-cwb.pages.dev"
+
+# editorData 基线一致性检查（也已在 build.py 里自动跑）
+python tools/check_editor_baseline.py
 ```
 
 > 公网验收退出码 0 = 全通过。最近一次结果见 `docs/ACCEPTANCE-2026-11-12.md`。
+>
+> **持续更新、迭代、回退的完整方案见 [`docs/ITERATION-GUIDE.md`](docs/ITERATION-GUIDE.md)。**
 
 部署前请确保两个脚本都是 **0 FAIL**。
 
