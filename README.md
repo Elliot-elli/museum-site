@@ -2,6 +2,11 @@
 
 把桌面上的单文件 HTML（3.05 MB）拆成可维护、可部署、可长期更新的静态站点。
 
+> **部署路线：走 Cloudflare Pages（路线 A）。**
+> 选型依据见 [`docs/CLOUDFLARE-STEPS.md`](docs/CLOUDFLARE-STEPS.md) 的「B-5 选型结论」。
+> 核心事实：`pages.dev` 境内解析正常，`workers.dev` 境内已被 DNS 污染（本机实测）；
+> Pages 还能在外部 DNS 加一条 CNAME 绑自有域名，Workers 必须把 NS 迁到 Cloudflare。
+
 ---
 
 ## 一、目录结构与职责
