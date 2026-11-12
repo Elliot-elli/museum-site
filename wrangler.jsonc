@@ -11,11 +11,15 @@
 	//   · not_found_handling = "404-page" → 未匹配路径返回我们的 404.html
 	//
 	// 名称约束：这里的 name 必须与 Cloudflare 后台里的 Worker 名称一致，
-	//   否则构建会失败（官方明确要求）。仓库名与 Worker 名均为 museum-site。
+	//   否则构建会失败（官方明确要求）。
+	//
+	//   ⚠️ 2026-11-12：Pages 项目实际名为 `museum-site-cwb`（线上 museum-site-cwb.pages.dev），
+	//   本文件同步改为同名，避免将来迁 Workers 时因名称不一致而失败。
+	//   注意：走 Pages 路线时本文件被忽略，改它不影响当前线上部署。
 	//
 	// 注意：走 Pages 路线时本文件会被忽略，不影响部署。
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "museum-site",
+	"name": "museum-site-cwb",
 	"compatibility_date": "2026-11-12",
 	"assets": {
 		"directory": "./site",

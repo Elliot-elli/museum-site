@@ -91,10 +91,10 @@ README.md   docs/   src/   tools/   wrangler.jsonc
 ### A-5 验证
 
 ```bash
-curl -I https://museum-site.pages.dev                      # 期望 200
-curl -s https://museum-site.pages.dev | grep -c base64     # 期望 0
-curl -s -o /dev/null -w "%{http_code}\n" https://museum-site.pages.dev/js/data.js   # 200
-curl -s -o /dev/null -w "%{http_code}\n" https://museum-site.pages.dev/css/main.css # 200
+curl -I https://museum-site-cwb.pages.dev                      # 期望 200
+curl -s https://museum-site-cwb.pages.dev | grep -c base64     # 期望 0
+curl -s -o /dev/null -w "%{http_code}\n" https://museum-site-cwb.pages.dev/js/data.js   # 200
+curl -s -o /dev/null -w "%{http_code}\n" https://museum-site-cwb.pages.dev/css/main.css # 200
 ```
 
 浏览器再点一遍：三个标签能切 / 图片能看 / 能放大 / 13 项自查能勾。

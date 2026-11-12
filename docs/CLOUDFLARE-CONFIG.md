@@ -117,25 +117,25 @@ Cloudflare → 左侧 **Rules** → **Redirect Rules** → **Create rule**
 ## 五、部署后的验证命令
 
 ```bash
-curl -I https://museum-site.pages.dev
+curl -I https://museum-site-cwb.pages.dev
 # 期望 HTTP/2 200
 
-curl -s https://museum-site.pages.dev | grep -c base64
+curl -s https://museum-site-cwb.pages.dev | grep -c base64
 # 期望 0（说明没把 3 MB 的 base64 传上去）
 
-curl -s -o /dev/null -w "%{http_code}\n" https://museum-site.pages.dev/css/main.css
+curl -s -o /dev/null -w "%{http_code}\n" https://museum-site-cwb.pages.dev/css/main.css
 # 期望 200
 
-curl -s -o /dev/null -w "%{http_code}\n" https://museum-site.pages.dev/js/data.js
+curl -s -o /dev/null -w "%{http_code}\n" https://museum-site-cwb.pages.dev/js/data.js
 # 期望 200
 
-curl -s -o /dev/null -w "%{http_code}\n" https://museum-site.pages.dev/img/case-01.jpg
+curl -s -o /dev/null -w "%{http_code}\n" https://museum-site-cwb.pages.dev/img/case-01.jpg
 # 期望 200
 
-curl -s -o /dev/null -w "%{http_code}\n" https://museum-site.pages.dev/nonexist
+curl -s -o /dev/null -w "%{http_code}\n" https://museum-site-cwb.pages.dev/nonexist
 # 期望 404（且页面是自定义 404.html，不是 CF 默认页）
 
-curl -I https://museum-site.pages.dev | grep -i cache-control
+curl -I https://museum-site-cwb.pages.dev | grep -i cache-control
 # 期望包含 max-age=0（HTML 不缓存）
 ```
 

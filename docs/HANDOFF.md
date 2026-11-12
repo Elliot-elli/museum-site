@@ -62,7 +62,7 @@
 > 🔴 **构建命令留空 = 必失败**。`site/` 是构建产物、被 `.gitignore` 排除 → CF 克隆后没有该目录
 > → 报 `Failed to find directory site`。这就是要提交 `build_cloud.sh` 让云端自己构建的原因。
 
-保存 → **Retry deployment** → 等约 1 分钟变绿 → 拿到 `museum-site.pages.dev`。
+保存 → **Retry deployment** → 等约 1 分钟变绿 → 拿到 `museum-site-cwb.pages.dev`。
 
 ### 路线 B · Workers（Cloudflare 现在主推）
 
@@ -90,10 +90,10 @@
 ### 2.3 验证
 
 ```bash
-curl -I https://museum-site.pages.dev                      # 期望 200
-curl -s https://museum-site.pages.dev | grep -c base64     # 期望 0（没把 3MB base64 传上去）
-curl -s -o /dev/null -w "%{http_code}\n" https://museum-site.pages.dev/js/data.js   # 200
-curl -s -o /dev/null -w "%{http_code}\n" https://museum-site.pages.dev/css/main.css # 200
+curl -I https://museum-site-cwb.pages.dev                      # 期望 200
+curl -s https://museum-site-cwb.pages.dev | grep -c base64     # 期望 0（没把 3MB base64 传上去）
+curl -s -o /dev/null -w "%{http_code}\n" https://museum-site-cwb.pages.dev/js/data.js   # 200
+curl -s -o /dev/null -w "%{http_code}\n" https://museum-site-cwb.pages.dev/css/main.css # 200
 ```
 
 浏览器再点一遍：三个标签能切 / 图片能看 / 能放大 / 13 项自查能勾。

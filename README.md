@@ -33,7 +33,8 @@ boya-museum-site/
 │   ├── make_favicon.py    生成图标
 │   ├── make_platform_files.py  生成 _headers / _redirects
 │   ├── verify.js          功能验证（真实 Chromium）
-│   └── verify_viewports.js 多视口验证
+│   ├── verify_viewports.js 多视口验证
+│   └── verify_live.js     公网验收（打线上地址，9 项）
 │
 └── docs/
     ├── DEPLOY.md           部署手册
@@ -112,7 +113,12 @@ node tools/verify_viewports.js
 
 # 与原始单文件逐案例正文比对（可选，需桌面原文件存在）
 node tools/verify.js --compare "C:/Users/EDY/Desktop/博雅博物馆_优秀案例解读_点击放大互动版_2026-11-02.html"
+
+# 公网验收（9 项：直接打线上地址，含导出 HTML 独立打开 + 移动视口）
+node tools/verify_live.js "https://museum-site-cwb.pages.dev"
 ```
+
+> 公网验收退出码 0 = 全通过。最近一次结果见 `docs/ACCEPTANCE-2026-11-12.md`。
 
 部署前请确保两个脚本都是 **0 FAIL**。
 

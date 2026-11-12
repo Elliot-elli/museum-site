@@ -1,11 +1,14 @@
 # Cloudflare Pages 上线教程（照着做即可）
 
 > 面向：第一次用 Cloudflare、或者在改版后的后台里找不到入口的人。
-> 目标：把 `Elliot-elli/museum-site` 仓库部署成公网可访问的 `https://museum-site.pages.dev`。
+> 目标：把 `Elliot-elli/museum-site` 仓库部署成公网可访问的 `https://museum-site-cwb.pages.dev`。
 > 全程约 10 分钟，其中等构建约 2~4 分钟。
 >
 > **本教程只走 Pages 路线。** 选 Pages 的理由见 `docs/CLOUDFLARE-STEPS.md` 的「B-5 选型结论」
 > （含本机实测的境内 DNS 污染证据）。
+>
+> ✅ **已上线并通过验收**（2026-11-12）：线上地址 `https://museum-site-cwb.pages.dev`，
+> 9 项浏览器验收全通过，大陆 DNS 解析正常。下方步骤可作为「重建一个项目」的参考。
 
 ---
 
@@ -93,7 +96,7 @@ Cloudflare 在 2026 年改了版，**「创建应用」的默认流程现在是 
 
 | 界面项（英文） | 界面项（中文） | 填什么 | 为什么 |
 |---|---|---|---|
-| Project name | 项目名称 | `museum-site` | 默认即可。同时决定 `museum-site.pages.dev` |
+| Project name | 项目名称 | `museum-site-cwb` | 本项目实际用的名字，决定 `museum-site-cwb.pages.dev` |
 | Production branch | 生产分支 | `main` | 你的主分支 |
 | Framework preset | 框架预设 | **None** | 选 Vite/React 会让 CF 去跑 `npm install && npm run build`，本项目没有 `package.json` → 失败 |
 | **Build command** | **构建命令** | **`bash tools/build_cloud.sh`** | 🔴 **不能留空**。`site/` 不在 Git 里，留空 → 报 `Failed to find directory site` |
@@ -137,25 +140,25 @@ Cloudflare 在 2026 年改了版，**「创建应用」的默认流程现在是 
 
 ```bash
 # 1) 首页 200
-curl -I https://museum-site.pages.dev
+curl -I https://museum-site-cwb.pages.dev
 
 # 2) 页面里不该再有 base64 内联大图（应该拆成了独立文件）
-curl -s https://museum-site.pages.dev | grep -c base64     # 期望 0
+curl -s https://museum-site-cwb.pages.dev | grep -c base64     # 期望 0
 
 # 3) 三个静态资源都要 200
-curl -s -o /dev/null -w "%{http_code}\n" https://museum-site.pages.dev/js/data.js    # 200
-curl -s -o /dev/null -w "%{http_code}\n" https://museum-site.pages.dev/css/main.css  # 200
-curl -s -o /dev/null -w "%{http_code}\n" https://museum-site.pages.dev/js/app.js     # 200
+curl -s -o /dev/null -w "%{http_code}\n" https://museum-site-cwb.pages.dev/js/data.js    # 200
+curl -s -o /dev/null -w "%{http_code}\n" https://museum-site-cwb.pages.dev/css/main.css  # 200
+curl -s -o /dev/null -w "%{http_code}\n" https://museum-site-cwb.pages.dev/js/app.js     # 200
 
 # 4) 三张图都要 200
 for i in 01 02 03; do
-  curl -s -o /dev/null -w "%{http_code}\n" https://museum-site.pages.dev/img/case-$i.jpg
+  curl -s -o /dev/null -w "%{http_code}\n" https://museum-site-cwb.pages.dev/img/case-$i.jpg
 done
 ```
 
 ### 6.2 浏览器验收（必须手动点一遍）
 
-打开 <https://museum-site.pages.dev>，逐项确认：
+打开 <https://museum-site-cwb.pages.dev>，逐项确认：
 
 - [ ] 三个标签能切换
 - [ ] 每张图能点开、放大、关闭
@@ -209,7 +212,7 @@ done
 |---|---|
 | 主机记录 | `museum`（对应 `museum.example.com`） |
 | 记录类型 | **CNAME** |
-| 记录值 | **`museum-site.pages.dev`** |
+| 记录值 | **`museum-site-cwb.pages.dev`** |
 | TTL | 默认（600 秒） |
 
 ### 7.5 等证书
@@ -300,6 +303,6 @@ git add -A && git commit -m "描述你的改动" && git push origin main
 | Pages 创建页（直达） | <https://dash.cloudflare.com/?to=/:account/workers-and-pages/create/pages> |
 | Workers 和 Pages 总览 | <https://dash.cloudflare.com/?to=%2F%3Aaccount%2Fworkers-and-pages> |
 | 本项目 GitHub 仓库 | <https://github.com/Elliot-elli/museum-site> |
-| 部署完成后的地址 | <https://museum-site.pages.dev> |
+| 部署完成后的地址 | <https://museum-site-cwb.pages.dev> |
 | 微信域名查询 | <https://safety.weixin.qq.com/> |
 | 文档中心 | <https://developers.cloudflare.com/pages/> |

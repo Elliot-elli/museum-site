@@ -131,7 +131,7 @@ git ls-remote --heads origin
 1. 回到项目的 **Deployments** 列表
 2. 点 **Retry deployment**（或直接 `git push` 空提交）
 3. 约 1 分钟后状态变绿 **Success**
-4. 拿到链接：`https://museum-site.pages.dev`
+4. 拿到链接：`https://museum-site-cwb.pages.dev`
 
 > 若部署失败，**看构建日志**（Deployments → 点开失败那次 → Build log）。
 > 常见错误对照见 `docs/CLOUDFLARE-CONFIG.md` 第六节。
@@ -139,26 +139,26 @@ git ls-remote --heads origin
 **验证**：
 
 ```bash
-curl -I https://museum-site.pages.dev
+curl -I https://museum-site-cwb.pages.dev
 # 期望 HTTP/2 200
 
-curl -s https://museum-site.pages.dev | grep -c base64
+curl -s https://museum-site-cwb.pages.dev | grep -c base64
 # 期望 0（说明没把 3MB 的 base64 传上去）
 
-curl -s -o /dev/null -w "%{http_code}\n" https://museum-site.pages.dev/css/main.css
+curl -s -o /dev/null -w "%{http_code}\n" https://museum-site-cwb.pages.dev/css/main.css
 # 期望 200
 
-curl -s -o /dev/null -w "%{http_code}\n" https://museum-site.pages.dev/js/data.js
+curl -s -o /dev/null -w "%{http_code}\n" https://museum-site-cwb.pages.dev/js/data.js
 # 期望 200
 
-curl -s -o /dev/null -w "%{http_code}\n" https://museum-site.pages.dev/img/case-01.jpg
+curl -s -o /dev/null -w "%{http_code}\n" https://museum-site-cwb.pages.dev/img/case-01.jpg
 # 期望 200
 
-curl -s -o /dev/null -w "%{http_code}\n" https://museum-site.pages.dev/nonexist
+curl -s -o /dev/null -w "%{http_code}\n" https://museum-site-cwb.pages.dev/nonexist
 # 期望 404（且页面是自定义 404.html，不是 CF 默认页）
 ```
 
-浏览器打开 `https://museum-site.pages.dev` → 三个案例标签可切换、图片能看、点「查看作品原图」能放大。
+浏览器打开 `https://museum-site-cwb.pages.dev` → 三个案例标签可切换、图片能看、点「查看作品原图」能放大。
 
 ---
 
