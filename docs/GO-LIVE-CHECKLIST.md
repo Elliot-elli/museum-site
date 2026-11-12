@@ -36,7 +36,7 @@ ssh -T git@github.com
 **期望输出**：
 
 ```
-Hi feixiang! You've successfully authenticated, but GitHub does not provide shell access.
+Hi Elliot-elli! You've successfully authenticated, but GitHub does not provide shell access.
 ```
 
 看到这句 = 公钥生效 ✅（后半句是正常的，GitHub 本身不提供 shell）
@@ -48,7 +48,7 @@ Hi feixiang! You've successfully authenticated, but GitHub does not provide shel
 ### 2.1 建仓
 
 1. 打开 <https://github.com/new>
-2. **Owner**：`feixiang`
+2. **Owner**：`Elliot-elli`
 3. **Repository name**：`museum-site`
 4. **Public**（必须 Public —— Cloudflare Pages 免费版不接私有仓库）
 5. ⚠️ **不要勾** "Add a README file"（我们要推已有历史）
@@ -79,7 +79,7 @@ git push -u origin main
 **期望**：
 
 ```
-To github.com:feixiang/museum-site.git
+To github.com:Elliot-elli/museum-site.git
  * [new branch]      main -> main
 ```
 
@@ -88,7 +88,7 @@ To github.com:feixiang/museum-site.git
 ```bash
 # 远程应有 3 个提交
 git ls-remote --heads origin
-# 打开 https://github.com/feixiang/museum-site 应能看到 src/ tools/ docs/ 和 README
+# 打开 https://github.com/Elliot-elli/museum-site 应能看到 src/ tools/ docs/ 和 README
 ```
 
 > 仓库里**没有** `site/` 目录 —— 这是设计如此（构建产物，不入库）。

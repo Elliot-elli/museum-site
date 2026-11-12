@@ -16,7 +16,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
 REPO="museum-site"
-USER_NAME="feixiang"
+USER_NAME="Elliot-elli"
 SSH_KEY="C:/Users/EDY/.ssh/id_ed25519_github"
 REMOTE="git@github.com:${USER_NAME}/${REPO}.git"
 
@@ -125,7 +125,7 @@ if git ls-remote --heads origin "$BRANCH" | grep -q .; then
   echo
   echo "  下一步：连接 Cloudflare Pages"
   echo "    https://dash.cloudflare.com → Workers 和 Pages → 创建 → Pages → 连接到 Git"
-  echo "    选 feixiang/museum-site，构建输出目录填 site，构建命令留空"
+  echo "    选 Elliot-elli/museum-site，构建输出目录填 site，构建命令留空"
   echo
   echo "  详细步骤见 docs/GO-LIVE-CHECKLIST.md 步骤 4"
 else
