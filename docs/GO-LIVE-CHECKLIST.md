@@ -102,30 +102,39 @@ git ls-remote --heads origin
 2. 选 **GitHub** → 授权 → 在 GitHub 上勾选 **`museum-site`** 仓库 → 安装
    （授权时如果 GitHub 问权限，勾 **Administration: Read-only** 和 **Contents: Read-only** 即可）
 3. 回到 Cloudflare，选中 `museum-site` 仓库 → **开始部署**
-   （首次会先用默认设置部署一次，**没关系**，下一步会改）
+   （首次会用默认设置部署一次，**大概率失败**（找不到 site/ 目录）—— **没关系**，下一步改设置）
 
 ### 4.3 ⚠️ 改构建设置（**最关键的一步**）
 
-**Workers 和 Pages → 你的项目 → Settings → Build settings**，按 `docs/CLOUDFLARE-CONFIG.md` 的表填：
+**Workers 和 Pages → 你的项目 → Settings → Build settings**：
 
 | 字段 | 填什么 |
 |---|---|
 | 框架预设 | **None** |
-| 构建命令 | **留空**（删掉自动填的内容） |
+| **构建命令** | **`bash tools/build_cloud.sh`** |
 | 构建输出目录 | **`site`** |
 | 根目录 | 留空 |
 
 点 **保存**。
 
-> ❗ **构建输出目录必须是 `site`，写成别的（比如仓库根或 `src`）都会 404。**
-> ❗ **构建命令必须留空** —— 本项目无构建步骤，填了反而会失败。
+> ❗ **构建命令不能留空！**
+> 本项目的 `site/` 是构建产物，被 `.gitignore` 排除，不在仓库里。
+> CF 克隆后只有 `README.md docs/ src/ tools/` —— **没有 `site/` 目录**。
+> 构建命令留空 → 部署报 `Failed to find directory site` → **直接失败**。
+>
+> ❗ **构建输出目录必须是 `site`**，写成仓库根或 `src` 都会 404。
+>
+> `bash tools/build_cloud.sh` 只依赖 bash + python3，**不需要 Node、不需要 npm install**。
 
 ### 4.4 确认成功
 
 1. 回到项目的 **Deployments** 列表
-2. 触发一次新部署：顶部 **Retry deployment**（或直接 `git push` 空提交）
+2. 点 **Retry deployment**（或直接 `git push` 空提交）
 3. 约 1 分钟后状态变绿 **Success**
 4. 拿到链接：`https://museum-site.pages.dev`
+
+> 若部署失败，**看构建日志**（Deployments → 点开失败那次 → Build log）。
+> 常见错误对照见 `docs/CLOUDFLARE-CONFIG.md` 第六节。
 
 **验证**：
 
@@ -139,8 +148,14 @@ curl -s https://museum-site.pages.dev | grep -c base64
 curl -s -o /dev/null -w "%{http_code}\n" https://museum-site.pages.dev/css/main.css
 # 期望 200
 
+curl -s -o /dev/null -w "%{http_code}\n" https://museum-site.pages.dev/js/data.js
+# 期望 200
+
 curl -s -o /dev/null -w "%{http_code}\n" https://museum-site.pages.dev/img/case-01.jpg
 # 期望 200
+
+curl -s -o /dev/null -w "%{http_code}\n" https://museum-site.pages.dev/nonexist
+# 期望 404（且页面是自定义 404.html，不是 CF 默认页）
 ```
 
 浏览器打开 `https://museum-site.pages.dev` → 三个案例标签可切换、图片能看、点「查看作品原图」能放大。
@@ -160,7 +175,12 @@ python tools/build.py --domain example.com
 git add -A && git commit -m "chore: 配置 www → 主域跳转" && git push
 ```
 
-4. 验证：
+4. ⚠️ **www → 主域的跳转不能用 `_redirects` 做**（CF 按路径不按主机名匹配，会静默忽略）。
+   正确做法是后台加 Redirect Rules：Cloudflare → **Rules** → **Redirect Rules** → Create rule
+   - Condition：`Hostname` **equals** `www.example.com`
+   - Then：**Static redirect** → URL `https://example.com` → 状态码 **301**
+
+5. 验证：
 
 ```bash
 curl -I https://www.example.com   # 期望 301 → https://example.com

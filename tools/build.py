@@ -118,7 +118,17 @@ def main() -> int:
         cmd += ["--domain", args.domain]
     subprocess.run(cmd, check=True)
 
-    # 4. 自检
+    # 4. 平台配置语法校验
+    #    CF 对看不懂的 _redirects 行会【静默忽略】——部署显示 Success 但规则不生效，
+    #    所以必须单独校验，不能只看构建是否通过。
+    rc = subprocess.run([sys.executable, str(HERE / "check_redirects.py")],
+                        capture_output=True, text=True)
+    if rc.returncode != 0:
+        print(rc.stdout)
+        print("[FAIL] _redirects / _headers 语法校验未通过")
+        return 1
+
+    # 5. 自检
     problems = selfcheck()
     if problems:
         print("\n[FAIL] 构建自检未通过：")
