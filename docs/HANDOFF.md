@@ -7,8 +7,8 @@
 
 ## 一句话现状
 
-**阶段 0/1/2 全部完成并通过验证**；本地 100% 就绪。
-**只卡在两个必须由你操作的网页授权动作**（GitHub 建仓 + Cloudflare 连接）。
+**阶段 0/1/2 全部完成并通过验证**；代码已推送 GitHub。
+**只剩 Cloudflare Pages 的网页连接操作**（需你操作一次）。
 
 ---
 
@@ -20,33 +20,16 @@
 | 沙箱注入层剥离 | ✅ 原文件每次点击抛 `openai.callTool is not a function`，已复现并修掉 |
 | 「导出 HTML」重写 | ✅ 导出时重新内联资源，不再产白页 |
 | 功能验证 | ✅ `verify.js` 16 项 + `verify_viewports.js` 25 项 = **41 PASS / 0 FAIL** |
-| Git 仓库 | ✅ 9 提交，`main` 分支，`.gitattributes` 锁 LF，克隆重建 **13/13 逐字节一致** |
+| Git 仓库 | ✅ 10 提交，`main` 分支，`.gitattributes` 锁 LF，克隆重建 **13/13 逐字节一致** |
 | SSH 密钥 | ✅ `~/.ssh/id_ed25519_github`，已注册到 GitHub，认证账号 **`Elliot-elli`** |
 | git 网络通路 | ✅ 全局改走 `ssh.github.com:443`（`github.com:443` 被代理拦截） |
-| remote | ✅ `git@github.com:Elliot-elli/museum-site.git` |
+| **代码推送** | ✅ **已完成**，`Elliot-elli/museum-site`（Public），远程 HEAD `9465837` |
+| **远程内容校验** | ✅ **tarball 逐文件 md5 比对 34/34 全部一致** |
 | 部署配置 | ✅ `_headers` / `_redirects` / `build_cloud.sh` / `check_redirects.py` 全部就绪 |
 
 ---
 
-## 卡点 1 · GitHub 仓库不存在（**需要你点一次**）
-
-MCP 连接器只有「读写已有仓库」权限，建仓返回 `403 Resource not accessible by integration`。
-SSH 也不能建仓（只能推送到已存在的仓库）。
-
-**操作**：<https://github.com/new>
-
-| 字段 | 填什么 |
-|---|---|
-| Owner | `Elliot-elli` |
-| Repository name | `museum-site` |
-| 可见性 | **Public**（Cloudflare Pages 免费版不接私有库） |
-| README / .gitignore / license | **全部不要勾** |
-
-建好后告诉我 → 我立刻 `git push -u origin main` + 用 MCP 补仓库描述。
-
----
-
-## 卡点 2 · Cloudflare Pages 连接（**需要你点一次**）
+## 卡点 · Cloudflare Pages 连接（**需要你点一次**）
 
 Wrangler 未安装、无 CF Token（命令行传凭据不安全）→ 走网页授权。
 
@@ -99,8 +82,9 @@ Then：**Static redirect** → `https://example.com` → 状态码 **301**
 | 项 | 结论 |
 |---|---|
 | `github.com:443` | ❌ 被 WorkBuddy 代理拦截（CONNECT 502） |
-| `api.github.com` / `ssh.github.com:443` | ✅ 可达 |
-| GitHub MCP | ⚠️ 连接器已 connected，但**无 `repo:create`** → 建仓 403 |
+| `api.github.com` / `ssh.github.com:443` / `codeload.github.com` | ✅ 可达 |
+| `raw.githubusercontent.com` | ❌ **HTTP 000（返回空）** → 校验远程内容用 **codeload tarball**，别用 raw |
+| GitHub MCP | ⚠️ 连接器 connected，但**无 `repo:create`**（建仓 403）、**无 `update_repository`**（描述改不了）；<br>偶发 `internal_error`（瞬时，重试可恢复） |
 | Cloudflare Token | ❌ 无。`api.cloudflare.com` 可达（只需 Token），`dash.cloudflare.com` 返回 403 属正常 |
 | 账号 | ⚠️ **SSH 公钥认证到 `Elliot-elli`**，不是 `feixiang`（那是另一个账号） |
 
@@ -136,7 +120,8 @@ bash tools/update.sh "更新案例 01 文案"
 ## 新会话接手后的第一条命令
 
 ```bash
-cd "C:/Users/EDY/WorkBuddy/boya-museum-site" && git log --oneline -3 && git status --short && ls site/
+cd "C:/Users/EDY/WorkBuddy/boya-museum-site" && git log --oneline -3 && git status -sb
 ```
 
-然后问用户：「GitHub 仓库建好了吗？」—— 建好就直接推；没建就复述上面卡点 1 的 4 个字段。
+然后问用户：「Cloudflare Pages 连上了吗？」—— 连上就验证链接；没连就复述上面「卡点 · Cloudflare」那 5 步。
+
