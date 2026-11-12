@@ -122,3 +122,19 @@ SSH 也不能建仓（只能推送到已存在的仓库）。
    产物目录不入库则**构建命令不能留空** → 提交 `build_cloud.sh` 让云端自建。
 
 **通用教训**：平台静默失败不会报错 → 配置必须**单独写语法校验并接进构建**。
+
+---
+
+## Cloudflare 2026 控制台改版（2026-11-12 实测与官方文档核对）
+
+> 原为全局记忆条目，因只属本项目而下沉至此。
+
+5. **Cloudflare 2026 改版：创建入口默认走 Workers，Pages 降级为「旧版工作流」** ——
+   Pages 入口是创建页顶部/底部一行小字（"Looking to deploy Pages? Get Started"），
+   官方直达链接 `dash.cloudflare.com/?to=/:account/workers-and-pages/create/pages`。
+   🔴 **用户说「找不到 Workers 和 Pages」多半是这个原因，不是他没登录。**
+   两条路线都要准备：Pages 填「构建输出目录」；Workers 用 `wrangler.jsonc`
+   （assets-only：无 `main`、无 `assets.binding`；`name` 必须与后台 Worker 名**完全一致**）。
+   Workers Static Assets **同样原生支持 `_headers`/`_redirects`**。
+   ⚠️ **Workers 绑自定义域名要求 NS 托管在 Cloudflare**；Pages 可 CNAME 到外部 DNS。
+   → 详见该仓库 `docs/CLOUDFLARE-STEPS.md`
