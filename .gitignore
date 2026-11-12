@@ -1,0 +1,23 @@
+# ── 构建产物（可由 src/ 重新生成，不进版本库）──
+site/
+
+# ── 工具与缓存 ──
+__pycache__/
+*.pyc
+node_modules/
+.DS_Store
+Thumbs.db
+
+# ── 本地凭据（绝不入库）──
+.env
+.env.*
+*.local
+wrangler.toml
+.wrangler/
+.netrc
+secrets.json
+
+# ── 临时文件 ──
+*.log
+*.tmp
+*.bak

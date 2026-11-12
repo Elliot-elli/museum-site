@@ -1,0 +1,5 @@
+# robots.txt — 博雅博物馆 · 优秀案例解读
+User-agent: *
+Allow: /
+
+# 无 sitemap 时不声明，避免搜索引擎抓取时报 404

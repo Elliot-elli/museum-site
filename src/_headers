@@ -1,0 +1,31 @@
+# Cloudflare Pages 响应头配置
+# 规则自上而下匹配，命中即生效。
+
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: SAMEORIGIN
+  Permissions-Policy: geolocation=(), microphone=(), camera=()
+
+# HTML 不缓存：保证内容更新后用户刷新即可看到最新版本
+/index.html
+  Cache-Control: public, max-age=0, must-revalidate
+
+/404.html
+  Cache-Control: public, max-age=0, must-revalidate
+
+# 静态资源可长缓存（内容变更时用带版本号的文件名或强制刷新）
+/css/*
+  Cache-Control: public, max-age=604800
+
+/js/*
+  Cache-Control: public, max-age=604800
+
+/img/*
+  Cache-Control: public, max-age=2592000
+
+/favicon.svg
+  Cache-Control: public, max-age=2592000
+
+/favicon.ico
+  Cache-Control: public, max-age=2592000

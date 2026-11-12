@@ -1,0 +1,9 @@
+# Cloudflare Pages 跳转规则
+# 用法：把 example.com 换成你的真实域名后生效。
+#
+# 1) www  → 主域（保留路径与查询串）
+# 2) 主域 → www（若你更希望用 www 作为主域，启用这一条并注释掉上面那条）
+# 3) 旧路径兼容：单文件时代的产物名，仍允许访问
+# 4) 去掉 .html 后缀（可选，友好 URL）
+
+# /old-file-name.html    /index.html     301
