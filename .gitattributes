@@ -1,0 +1,30 @@
+# 换行符策略：仓库内统一 LF，检出时不转换。
+#
+# 为什么必须固化：
+#   core.autocrlf 是「本地配置」，不随仓库走，别人 clone 后行为可能不同。
+#   若某人在 Windows 上把 LF 转成 CRLF 再提交，会造成全文件 diff、
+#   构建产物 md5 漂移、跨平台 diff 噪声。
+#   用 .gitattributes 在仓库级锁定，优先级高于任何本地配置。
+
+# 文本文件：仓库内存 LF，检出时也保持 LF
+* text=auto eol=lf
+
+# 明确指定常见文本类型（避免个别 Git 版本对 * 的推断差异）
+*.html text eol=lf
+*.css  text eol=lf
+*.js   text eol=lf
+*.json text eol=lf
+*.txt  text eol=lf
+*.md   text eol=lf
+*.py   text eol=lf
+*.yml  text eol=lf
+*.yaml text eol=lf
+
+# 二进制：禁止任何换行/文本转换
+*.jpg  binary
+*.jpeg binary
+*.png  binary
+*.gif  binary
+*.ico  binary
+*.woff binary
+*.woff2 binary
