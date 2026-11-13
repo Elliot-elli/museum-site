@@ -36,6 +36,15 @@ VALID_CODES = {"301", "302", "303", "307", "308", "200", "404"}
 # Netlify 风格的占位符 —— 在 CF Pages 里会被静默忽略
 NETLIFY_STYLE = re.compile(r"\$\d+|\$\{[^}]+\}")
 
+# 匹配「所有路径」的源。只有根通配 + 外部绝对地址目标才是致命的：
+# Pages 的规则对 *.pages.dev 与自定义域名【同时生效】，
+# 目标域名又 CNAME 指回本项目 → 无限重定向；pages.dev 地址也会一并失效。
+ROOT_WILDCARD_SOURCES = {"/*", "/:splat", "/*/", "/:splat/"}
+
+
+def is_root_wildcard(src: str) -> bool:
+    return src.strip() in ROOT_WILDCARD_SOURCES
+
 
 def check_file(path: Path) -> list[str]:
     problems: list[str] = []
@@ -86,6 +95,18 @@ def check_file(path: Path) -> list[str]:
             problems.append(
                 f"第 {i} 行：源用了 Netlify 风格的 $1/${{...}} —— "
                 f"Cloudflare Pages 必须用 :splat 或 :name。")
+
+        # 🔴 根通配 + 外部绝对地址目标 = 死循环 / pages.dev 失效
+        #    Pages 的 _redirects 对所有主机名生效，根通配会同时命中
+        #    *.pages.dev 与自定义域名；目标域名若 CNAME 指回本项目 → 无限重定向。
+        if is_root_wildcard(src) and (dst.startswith("http://") or dst.startswith("https://")):
+            problems.append(
+                f"第 {i} 行：根通配源（{src}）+ 外部绝对地址目标（{dst}）—— "
+                f"该规则会同时作用于 *.pages.dev 与自定义域名；"
+                f"若目标域名 CNAME 指回本 Pages 项目会造成【无限重定向】，"
+                f"并让 pages.dev 地址失效。"
+                f"www↔主域请用后台 Redirect Rules，或把 www 也加为第二个自定义域名"
+                f"（详见 docs/DOMAIN-BINDING.md）。")
 
         # 目标里的 :splat 必须与源的 * 对应
         if "*" in src and ":splat" not in dst and "?" not in dst:
@@ -138,10 +159,75 @@ def check_headers(path: Path) -> list[str]:
     return problems
 
 
+def selftest() -> int:
+    """自检：每条判据都要有「必须被拦」的反例，否则说明判据写成了永真。"""
+    import tempfile
+
+    cases: list[tuple[str, str, bool]] = [
+        # (说明, 文件内容, 期望被拦)
+        ("根通配 + 外部绝对地址（死循环）",
+         "/*  https://museum.example.com/:splat  301\n", True),
+        ("根通配 + 外部绝对地址（无 splat）",
+         "/*  https://museum.example.com/  301\n", True),
+        ("根通配占位符源 + 外部绝对地址",
+         "/:splat  https://museum.example.com/:splat  301\n", True),
+        ("Netlify 风格 $1",
+         "/*  https://museum.example.com/$1  301\n", True),
+        ("源里带主机名",
+         "https://www.example.com/*  /index.html  301\n", True),
+        ("非法状态码",
+         "/a  /b  999\n", True),
+        ("一行多条规则",
+         "/a  /b  301  /c\n", True),
+        ("只有源没有目标",
+         "/a\n", True),
+        ("正常路径映射（应放行）",
+         "/old.html  /index.html  301\n", False),
+        ("正常路径重写 + splat（应放行）",
+         "/blog/*  /posts/:splat  301\n", False),
+        ("去掉 .html 后缀（应放行）",
+         "/index  /  301\n", False),
+        ("全是注释（应放行）",
+         "# just a comment\n# /a  /b  301\n", False),
+        ("空文件（应放行）",
+         "", False),
+    ]
+
+    failed = 0
+    for i, (name, content, should_flag) in enumerate(cases, 1):
+        with tempfile.NamedTemporaryFile("w", suffix="_redirects", delete=False,
+                                         encoding="utf-8", newline="") as fh:
+            fh.write(content)
+            tmp = Path(fh.name)
+        try:
+            problems = check_file(tmp)
+            flagged = len(problems) > 0
+            if flagged == should_flag:
+                print(f"PASS  R{i}  {name}"
+                      + (f"  — {problems[0][:60]}" if problems else ""))
+            else:
+                failed += 1
+                print(f"FAIL  R{i}  {name}  — 期望{'拦截' if should_flag else '放行'}，"
+                      f"实际{'拦截' if flagged else '放行'}")
+                for p in problems:
+                    print(f"        {p}")
+        finally:
+            tmp.unlink(missing_ok=True)
+
+    print()
+    print(f"===== 跳转规则自检 {len(cases)} 项 =====")
+    print("结果：全部通过" if failed == 0 else f"结果：{failed} 项失败")
+    return 1 if failed else 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--file", default="", help="只检查指定文件")
+    ap.add_argument("--selftest", action="store_true", help="只跑自检（不检查项目文件）")
     args = ap.parse_args()
+
+    if args.selftest:
+        return selftest()
 
     if args.file:
         targets = [(Path(args.file), "redirects")]

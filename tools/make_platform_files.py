@@ -54,32 +54,75 @@ HEADERS = """\
 """
 
 REDIRECTS_TEMPLATE = """\
-# Cloudflare Pages 跳转规则
-# 用法：把 example.com 换成你的真实域名后生效。
+# Cloudflare Pages 跳转规则（尚未绑定自有域名）
 #
-# 1) www  → 主域（保留路径与查询串）
-# 2) 主域 → www（若你更希望用 www 作为主域，启用这一条并注释掉上面那条）
-# 3) 旧路径兼容：单文件时代的产物名，仍允许访问
-# 4) 去掉 .html 后缀（可选，友好 URL）
-
+# ⚠️ 本文件【不会】生成 www → 主域 的跳转，这不是遗漏，是 Cloudflare 的硬限制：
+#    · Pages 的 _redirects 按【路径】匹配，不按主机名匹配
+#      （官方文档 Advanced redirects 表里 Domain-level redirects 一栏直接标 ❌ 不支持）
+#    · 规则会同时作用于 *.pages.dev 与自定义域名。若写
+#      /*  https://example.com/:splat  301
+#      则 pages.dev 也会跳走，而自定义域名又 CNAME 指回本项目 → 无限重定向。
+#
+# ✅ 绑域名后 www↔主域跳转的正确做法（二选一，详见 docs/DOMAIN-BINDING.md）：
+#   A) 域名 NS 托管到 Cloudflare → 后台 Rules → Redirect Rules 建规则
+#   B) NS 留在原 DNS 服务商 → 把 www 也加为第二个自定义域名
+#
+# 旧路径兼容：单文件时代的产物名，仍允许访问
 # /old-file-name.html    /index.html     301
+#
+# 去掉 .html 后缀（可选，友好 URL）
+# /index    /  301
 """
 
 REDIRECTS_WITH_DOMAIN = """\
-# Cloudflare Pages 跳转规则
-
-# 1) www → 主域（保留路径与查询串）
-/*  https://{domain}/$1  301
-
-# 2) 去掉 .html 后缀（可选，友好 URL）
-# /index  /  301
+# Cloudflare Pages 跳转规则（已绑定域名：{domain}）
+#
+# ⚠️ 这里【刻意不生成】 www → 主域 的跳转规则，理由同上：
+#    Cloudflare Pages 的 _redirects 按【路径】匹配、不按主机名匹配，
+#    且规则同时作用于 *.pages.dev 与自定义域名 —— 写成根通配 /* 会在两个地址之间死循环。
+#
+# ✅ 请在 Cloudflare 后台手工建这一条（仅路线 A「NS 托管 Cloudflare」可用）：
+#    Rules → Redirect Rules → Create rule
+#      Rule name     : www → apex
+#      Condition     : Custom filter → Hostname equals www.{domain}
+#      Then          : Static redirect → https://{domain}
+#      Status code   : 301
+#
+#    若是路线 B（NS 留在原 DNS 服务商），后台 Redirect Rules 不生效，
+#    请改为把 www.{domain} 也加为第二个自定义域名（见 docs/DOMAIN-BINDING.md §4）。
+#
+# 旧路径兼容：单文件时代的产物名，仍允许访问
+# /old-file-name.html    /index.html     301
+#
+# 去掉 .html 后缀（可选，友好 URL）
+# /index    /  301
 """
+
+
+def collect_active_rules() -> list[str]:
+    """读取真源 src/_redirects 里【手写的有效规则】。
+
+    为什么需要：本脚本会整体重写 _redirects。若直接把生成内容整份覆盖，
+    用户手写在 src/_redirects 里的规则会被【静默抹掉】——
+    构建照样成功、部署照样 Success，规则却不在产物里。
+
+    确定性不受影响：真源固定，产物每次重建都一致。
+    """
+    src_file = ROOT / "src" / "_redirects"
+    if not src_file.exists():
+        return []
+    rules = []
+    for raw in src_file.read_text(encoding="utf-8", newline="").split("\n"):
+        s = raw.strip()
+        if s and not s.startswith("#"):
+            rules.append(s)
+    return rules
 
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--domain", default="example.com",
-                    help="你的主域名；填 real domain 后生成可用的 _redirects")
+    ap.add_argument("--domain", default="",
+                    help="你的主域名；填了就会生成带该域名的说明性 _redirects")
     ap.add_argument("--out", default="src",
                     help="输出目录（相对项目根）：src=真源，site=构建产物")
     args = ap.parse_args()
@@ -88,14 +131,23 @@ def main() -> int:
     out_dir.mkdir(parents=True, exist_ok=True)
     (out_dir / "_headers").write_text(HEADERS, encoding="utf-8", newline="")
 
-    if args.domain and args.domain != "example.com":
-        (out_dir / "_redirects").write_text(
-            REDIRECTS_WITH_DOMAIN.format(domain=args.domain), encoding="utf-8", newline="")
+    # 注意：不要拿 "example.com" 当「未指定域名」的哨兵值 ——
+    # 那会让「真的想绑 example.com」被静默降级成占位模板。
+    if args.domain:
+        body = REDIRECTS_WITH_DOMAIN.format(domain=args.domain)
         print(f"[OK] _redirects 已按域名 {args.domain} 生成 → {out_dir}")
     else:
-        (out_dir / "_redirects").write_text(REDIRECTS_TEMPLATE, encoding="utf-8", newline="")
-        print(f"[OK] _redirects 已生成占位模板 → {out_dir}（指定 --domain 后生成可用规则）")
+        body = REDIRECTS_TEMPLATE
+        print(f"[OK] _redirects 已生成占位模板 → {out_dir}（指定 --domain 后附上该域名的跳转说明）")
 
+    # 追加真源里手写的有效规则（不覆盖、不丢失）
+    active = collect_active_rules()
+    if active:
+        body += "\n# ---- 以下为 src/_redirects 中手写的有效规则（构建时保留）----\n"
+        body += "\n".join(active) + "\n"
+        print(f"[OK] 保留手写规则 {len(active)} 条")
+
+    (out_dir / "_redirects").write_text(body, encoding="utf-8", newline="")
     print(f"[OK] _headers 已生成 → {out_dir}")
     return 0
 
