@@ -118,6 +118,15 @@ node tools/verify.js
 # 多视口验证（5 个视口：1440 / 1280 / 820 / 390 / 360）
 node tools/verify_viewports.js
 
+# 新增交互验证（15 项：键盘切案例 / URL 同步 / skip-link / 锚点）
+node tools/verify_features.js
+
+# 无障碍与 SEO（21 项：对比度 AA / 标题层级 / 元数据 / sitemap / robots）
+node tools/verify_a11y_seo.js
+
+# 图片与导出件（25 项：各视口实际选中的变体 / 导出件内联与独立打开）
+node tools/verify_images.js
+
 # 与原始单文件逐案例正文比对（可选，需桌面原文件存在）
 node tools/verify.js --compare "C:/Users/EDY/Desktop/博雅博物馆_优秀案例解读_点击放大互动版_2026-11-02.html"
 
@@ -126,13 +135,18 @@ node tools/verify_live.js "https://museum-site-cwb.pages.dev"
 
 # editorData 基线一致性检查（也已在 build.py 里自动跑）
 python tools/check_editor_baseline.py
+
+# 改了 CSS 才需要：像素级回归（4 视口 × 5 状态）
+node tools/capture_visual.js .snap/after
+node tools/capture_visual.js .snap/after2
+python tools/compare_visual.py .snap/before .snap/after --noise .snap/after2
 ```
 
 > 公网验收退出码 0 = 全通过。最近一次结果见 `docs/ACCEPTANCE-2026-11-12.md`。
 >
 > **持续更新、迭代、回退的完整方案见 [`docs/ITERATION-GUIDE.md`](docs/ITERATION-GUIDE.md)。**
 
-部署前请确保两个脚本都是 **0 FAIL**。
+部署前请确保五个 `verify_*.js` 脚本都是 **0 FAIL**。
 
 ---
 

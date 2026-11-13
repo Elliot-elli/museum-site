@@ -21,3 +21,6 @@ secrets.json
 *.log
 *.tmp
 *.bak
+
+# ── 像素回归快照（可由 tools/capture_visual.js 重建）──
+.snap/

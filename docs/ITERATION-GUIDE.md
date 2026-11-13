@@ -10,13 +10,14 @@
 
 | 层 | 现状 | 迭代影响 |
 |---|---|---|
-| 真源 | `src/`（8 个文件） | **只改这里** |
-| 产物 | `site/`（13 个文件，1.81 MB） | 不进 Git，`.gitignore` 排除，**永远不要手改** |
-| 数据层 | `src/js/data.js`（30 KB，3 个案例） | **无数据库**，纯静态 JS 对象 |
-| 交互层 | `src/js/app.js`（17 KB，单文件） | 改逻辑 |
-| 样式 | `src/css/main.css`（16 KB） | 改样式 |
+| 真源 | `src/`（12 个文件 + 12 个 WebP 变体） | **只改这里** |
+| 产物 | `site/`（26 个文件，3.84 MB） | 不进 Git，`.gitignore` 排除，**永远不要手改** |
+| 数据层 | `src/js/data.js`（3 案例 + 响应式图字段） | **无数据库**，纯静态 JS 对象 |
+| 交互层 | `src/js/app.js`（单文件，含编辑/导出/复原功能） | 改逻辑 |
+| 样式 | `src/css/main.css`（15 KB，无重复选择器） | 改样式 |
 | 存档 | `src/index.html` 内嵌 `<script id="editorData">` | 🔴 **DOM 顺序敏感，见 §5** |
-| 构建 | `tools/build.py` → `site/` | 5 步：复制 → favicon → 平台配置 → `_redirects` 校验 → 自检 |
+| 图片 | `src/img/*.jpg`（原图）+ `*.webp`（4 档变体） | 改图后跑 `tools/make_webp.py` |
+| 构建 | `tools/build.py` → `site/` | 复制 → favicon → 平台配置 → `_redirects` 校验 → 自检 |
 | 部署 | Cloudflare Pages（Git 集成，`main` 分支） | push 即自动部署 |
 | 产物特性 | 确定性重建 | ✅ 同一提交必得同一产物 md5（已实测） |
 
@@ -96,6 +97,45 @@ git add -A && git commit -m "描述本次改动" && git push origin main
 # ⑤ 等 2~4 分钟，Cloudflare 自动构建部署
 #    线上地址不变：https://museum-site-cwb.pages.dev
 ```
+
+### 2.1.1 完整验证清单（2026-11-13 起，77 项）
+
+改动越大，跑得越多。**改了 CSS 或图片，必须跑 3 和 4**。
+
+```bash
+export NODE_PATH="C:/Users/EDY/.workbuddy/binaries/node/workspace/node_modules"
+
+node tools/verify.js            # 16 项 · 功能回归（含与原单文件逐字比对 V8）
+node tools/verify_features.js   # 15 项 · 键盘导航、URL 同步、skip-link、锚点
+node tools/verify_a11y_seo.js   # 21 项 · 对比度 AA、标题层级、SEO 元数据、sitemap
+node tools/verify_images.js     # 25 项 · 响应式选图、导出件内联与独立打开
+```
+
+### 2.1.2 改了 CSS 还要跑像素回归
+
+```bash
+node tools/capture_visual.js .snap/before     # 改 CSS 之前抓基线
+# ... 改 CSS → bash tools/build_cloud.sh ...
+node tools/capture_visual.js .snap/after
+node tools/capture_visual.js .snap/after2      # 同版本再抓一次，量噪声地板
+python tools/compare_visual.py .snap/before .snap/after --noise .snap/after2
+```
+
+抓取覆盖 4 视口（320/375/768/1440）× 5 状态（默认 / 案例 03 / 展板放大弹层 / 编辑模式 / 打印）。
+
+> ⚠️ **Chromium 对缩放后的图片栅格化并非逐次一致**：同一份代码抓两次，
+> 图片区域也会出现约 0.4% 的抗锯齿差异。所以 `--noise` 是必需的 ——
+> 它用同版本的另一次抓取做噪声地板，A→B 的差异不超过地板才算通过。
+
+### 2.1.3 改了图片源图
+
+```bash
+# 改了 src/img/case-0N.jpg 之后
+python tools/make_webp.py            # 重新生成 4 档 WebP 变体
+python tools/make_webp.py --check    # 只校验变体是否与源图同步
+```
+
+🔴 **只缩放不改比例** —— `data.js` 的 `analysisRegions` 是百分比坐标，改比例会让展板热点错位。
 
 ### 2.2 部署前提条件（六个，缺一不可）
 
@@ -392,7 +432,51 @@ git push origin main
 
 ---
 
-## 9. 一页纸速查
+## 9. 2026-11-13 优化迭代：新增约定
+
+### 9.1 颜色变量
+
+| 变量 | 现值 | 说明 |
+|---|---|---|
+| `--muted` | `#5f6a63` | 旧值 `#68746d` 在纸色底上只有 4.39:1，不达 AA |
+| `--accent` | `#a8512f` | 旧值 `#be603b` 在米白底上只有 4.19:1，不达 AA |
+
+改动这两个值**必须**重跑 `node tools/verify_a11y_seo.js`（A1 项判 38 处正文对比度）。
+不要改回旧值 —— 它们是 2026-11-12 版 38 处对比度不达标的根因。
+
+### 9.2 图片
+
+- 变体档位固定为 **640 / 960 / 1280 + 原宽**。改档位要同步 `tools/make_webp.py` 的 `WIDTHS` 与 `data.js` 的 `imageSrcset`。
+- **裁剪源是全分辨率原图**（`cases[i].image`），不是屏幕上那张缩略版 —— 展板小字要看得清。
+- 导出件靠 `inlineAssets` 把图片转成 data URI；`srcset` 一律剥离，否则导出件里是坏图。
+
+### 9.3 CSS
+
+- 同一选择器**不允许在顶层重复出现**。合并用 `python tools/canonicalize_css.py`，
+  它会自动跳过与 `@media` 内同选择器冲突的组（合并会把规则搬到媒体块之后，窄屏下优先级会翻转）。
+- 🔴 **不要手工把一条规则挪到 `@media` 块之后。**
+
+### 9.4 验证脚本
+
+| 脚本 | 项数 | 何时必须跑 |
+|---|---|---|
+| `tools/verify.js` | 16 | 每次改动 |
+| `tools/verify_features.js` | 15 | 改了 app.js / index.html 的交互 |
+| `tools/verify_a11y_seo.js` | 21 | 改了 CSS 颜色、head 元数据、页面结构 |
+| `tools/verify_images.js` | 25 | 改了图片相关代码 |
+| `tools/capture_visual.js` + `tools/compare_visual.py` | 17 张截图 | 改了 CSS |
+
+### 9.5 新增铁律
+
+1. **改 head 元数据时保持 `<title>` 与 `<body>` 同行** —— 文案校验工具按行号判定 title 上下文，
+   压掉换行会让 107 处既有正文突然被计入「信息密度」违规（实测 R10 从 0 跳到 107）。
+2. **改图片必须跑 `make_webp.py`**，否则 `srcset` 会指向过期的变体。
+3. **合并 CSS 前先跑 `canonicalize_css.py --check`**，它会指出哪些组不能合并。
+4. **改完 CSS 跑像素回归**（§2.1.2），只跑功能验证不足以发现层叠顺序被改。
+
+---
+
+## 10. 一页纸速查
 
 ```
 日常改内容：
@@ -405,12 +489,23 @@ git push origin main
   → 在 https://feature-case-04.museum-site-cwb.pages.dev 验收
   → git checkout main && git merge --no-ff feature/case-04 && git push origin main
 
+改 CSS：
+  改 src/css/main.css → bash tools/build_cloud.sh
+  → node tools/capture_visual.js .snap/after && node tools/capture_visual.js .snap/after2
+  → python tools/compare_visual.py .snap/before .snap/after --noise .snap/after2
+
+改图片：
+  改 src/img/case-0N.jpg → python tools/make_webp.py
+  → bash tools/build_cloud.sh → node tools/verify_images.js
+
 出故障：
   后台 Deployments → Rollback to this deployment（秒级止血）
   → git revert --no-edit HEAD && git push origin main（真正修掉）
 
-三条铁律：
+五条铁律：
   ① 只改 src/，永远不要手改 site/
   ② 增删正文标签后，必须重置 editorData 基线
   ③ 每次大迭代后打一个 tag
+  ④ 改 CSS 后跑像素回归，只跑功能验证看不出层叠顺序被改
+  ⑤ 改 head 时保持 <title> 与 <body> 同行，别压换行
 ```
