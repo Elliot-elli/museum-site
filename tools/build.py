@@ -41,7 +41,7 @@ SRC = ROOT / "src"
 SITE = ROOT / "site"
 
 REQUIRED = [
-    "index.html", "404.html", "robots.txt", "_headers", "_redirects",
+    "index.html", "404.html", "robots.txt", "sitemap.xml", "_headers", "_redirects",
     "favicon.svg", "favicon.ico",
     "css/main.css", "js/app.js", "js/data.js",
     "img/case-01.jpg", "img/case-02.jpg", "img/case-03.jpg",
