@@ -193,11 +193,15 @@ done
 
 ### 7.3 在 Cloudflare 里加自定义域名
 
+> 📌 **2026-11-13 更新**：本步只覆盖「DNS 留在原服务商 + 用子域名」这条路线。
+> 完整的三条路线对比（含 NS 托管 Cloudflare、根域名要求）见
+> [`docs/DOMAIN-BINDING.md`](./DOMAIN-BINDING.md)，建议直接照那份做。
+
 1. 进入 **Workers 和 Pages → 你的项目 `museum-site`**
 2. 点 **「Custom domains」（自定义域名）**
 3. 点 **「Set up a custom domain」**
 4. 填你的域名，例如 `museum.example.com`
-   （**建议用子域名**，比如 `museum.` 开头，不要用根域名 `example.com`）
+   （**必须是子域名**：官方要求「根域名必须把 NS 托管到 Cloudflare」，本步骤不适用）
 5. 点 **「Continue」**
 6. Cloudflare 会提示你去 DNS 服务商加一条 **CNAME 记录**
 
@@ -222,11 +226,17 @@ done
 
 ### 7.6 统一 www / 主域跳转
 
-CF 的 `_redirects` **按路径匹配、不按主机名**，所以 `www` 跳转必须用后台规则：
+CF 的 `_redirects` **按路径匹配、不按主机名**（官方「Advanced redirects」表里
+Domain-level redirects 一栏标 ❌ 不支持），所以 `www` 跳转必须用后台规则：
 
 **Rules → Redirect Rules → Create rule**
 - Condition：`Hostname` **equals** `www.museum.example.com`
 - Then：**Static redirect** → `https://museum.example.com` → 状态码 **301**
+
+> 🔴 **前提**：域名必须在你的 Cloudflare 账号里（NS 托管到 Cloudflare）。
+> 若 DNS 仍留在阿里云/腾讯云，请求不经过你的 Cloudflare 区域，
+> **Redirect Rules 配了也不生效** —— 这种情况改用「www 也加为第二个自定义域名 +
+> 同一条 CNAME」的双域名方案。详见 [`docs/DOMAIN-BINDING.md`](./DOMAIN-BINDING.md) §4。
 
 ### 7.7 域名劫持检查（❗ 重要，做完务必做）
 

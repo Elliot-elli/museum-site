@@ -35,10 +35,14 @@ boya-museum-site/
 │   ├── verify.js          功能验证（真实 Chromium）
 │   ├── verify_viewports.js 多视口验证
 │   ├── verify_live.js     公网验收（打线上地址，9 项）
+│   ├── verify_domain.js   自有域名验收（7 项，绑完域名后跑）
+│   ├── verify_domain.selftest.js 域名验收脚本的纯逻辑自检（13 项）
 │   └── check_editor_baseline.py 基线一致性检查（已接入 build.py 自检）
 │
 └── docs/
     ├── DEPLOY.md           部署手册
+    ├── DOMAIN-BINDING.md   绑自有域名运行手册 ← 🔴 唯一高优先待办
+    ├── ITERATION-GUIDE.md  迭代 / 部署 / 回退完整方案
     └── OPERATIONS.md       运维与回滚
 ```
 

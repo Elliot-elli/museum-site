@@ -88,7 +88,22 @@ CF Pages 的 `_redirects` **按路径匹配，不按主机名匹配**。
 写 `https://www.example.com/*  https://example.com/:splat  301` 会被**静默忽略**
 （部署成功但跳转不生效）。这是 Cloudflare 上最常见的「以为配好了其实没生效」。
 
+> 官方文档佐证：Pages「Advanced redirects」表格里 **Domain-level redirects 一栏直接标 ❌ 不支持**。
+
 **正确做法 —— 后台 Redirect Rules**：
+
+> 🔴 **前置条件（2026-11-13 补）：域名必须在你的 Cloudflare 账号里、且 CNAME 是「已代理」状态。**
+> Redirect Rules 是**区域级（zone-level）**功能。官方原文：
+> *「With a DNS-only record or an external DNS provider, requests do not pass through your zone's
+> HTTP settings.」*
+> 也就是说：如果域名 NS 还留在阿里云/腾讯云、DNS 记录是指过去的 CNAME，
+> **这个规则配了也不会生效**。
+> → 这种情况下改用「把 www 也加为第二个自定义域名 + 加同一条 CNAME」的双域名方案，
+> 或把 NS 托管到 Cloudflare。详见 [`docs/DOMAIN-BINDING.md`](./DOMAIN-BINDING.md) §4。
+>
+> ⚠️ 另：`_redirects` 里的规则会**同时作用在 `*.pages.dev` 上**，
+> 写一条「全部跳主域」会让 `museum-site-cwb.pages.dev` 也跳走，甚至造成跳转死循环。
+> `tools/check_redirects.py` 只校验跳转目标的**语法**，管不了主机名匹配（因为本就不支持）。
 
 Cloudflare → 左侧 **Rules** → **Redirect Rules** → **Create rule**
 
