@@ -107,6 +107,10 @@ window.MUSEUM_DATA = [
     ],
     "note": "",
     "image": "img/case-01.jpg",
+    "imageSrcset": "img/case-01-640.webp 640w, img/case-01-960.webp 960w, img/case-01-1280.webp 1280w, img/case-01.webp 1900w",
+    "imageSizes": "(max-width:760px) 92vw, 600px",
+    "imageW": 1900,
+    "imageH": 1604,
     "overview": "该作品是一个可以参考的标准案例。其突出之处不在于内容数量，而在于研究思路清晰：从一开始就明确研究问题，围绕问题逐步展开分析，再通过数据与论证作出回答。选题将宏观的“气候变化”具体化为与日常生活相关的“个人碳足迹”，使研究更具针对性和现实意义。分析结合多个生活领域的数据，解释个体行为如何影响环境结果；展板结构清晰、信息有序，便于读者理解。总体而言，作品在研究问题设定、数据分析、结构组织和信息呈现等方面表现均衡。",
     "focus": "研究重点是饮食、居家能源、交通、消费与垃圾处理四个生活领域：哪些领域对个人碳足迹贡献较大？单一行动与多种行动组合的减排潜力有何差异？",
     "analysisPositions": [
@@ -263,6 +267,10 @@ window.MUSEUM_DATA = [
     ],
     "note": "",
     "image": "img/case-02.jpg",
+    "imageSrcset": "img/case-02-640.webp 640w, img/case-02-960.webp 960w, img/case-02-1280.webp 1280w, img/case-02.webp 1900w",
+    "imageSizes": "(max-width:760px) 92vw, 600px",
+    "imageW": 1900,
+    "imageH": 1635,
     "overview": "该作品整体水平较高，在选题、分析与表达方面均有突出表现。它从较新颖的角度切入，将人工智能时代的语言使用习惯与气候变化问题联系起来，体现出较强的思考能力。研究使用数据支持论证，并以“绿色提示词”进一步思考未来数字生活方式。展板结构清晰、信息有层次，视觉风格与主题一致。总体而言，作品在多个维度表现均衡，具有参考价值；研究问题的精确性、装饰与内容的关联以及观众参与方式仍有提升空间。",
     "focus": "研究聚焦人与AI对话中的礼貌表达及冗余语言，尝试通过词元数量、输入输出长度和规模化估算，探讨能否在保持AI效能的同时减少数字足迹。",
     "rqRevision": [
@@ -424,6 +432,10 @@ window.MUSEUM_DATA = [
     ],
     "note": "",
     "image": "img/case-03.jpg",
+    "imageSrcset": "img/case-03-640.webp 640w, img/case-03-960.webp 960w, img/case-03-1280.webp 1280w, img/case-03.webp 1620w",
+    "imageSizes": "(max-width:760px) 92vw, 600px",
+    "imageW": 1620,
+    "imageH": 1080,
     "dimEnglish": [
       "Research Question",
       "Research Analysis",
