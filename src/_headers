@@ -14,12 +14,14 @@
 /404.html
   Cache-Control: public, max-age=0, must-revalidate
 
-# 静态资源可长缓存（内容变更时用带版本号的文件名或强制刷新）
+# CSS / JS 每次访问都向 Cloudflare 校验 ETag，未变更返回 304（0 字节）。
+# 代价：多 1 个 RTT（浏览器并行发出，不叠加）。
+# 收益：改完样式或脚本刷新即生效，不会像 max-age=604800 那样让老用户卡在旧版本一周。
 /css/*
-  Cache-Control: public, max-age=604800
+  Cache-Control: public, max-age=0, must-revalidate
 
 /js/*
-  Cache-Control: public, max-age=604800
+  Cache-Control: public, max-age=0, must-revalidate
 
 /img/*
   Cache-Control: public, max-age=2592000

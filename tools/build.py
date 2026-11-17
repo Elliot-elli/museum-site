@@ -41,10 +41,13 @@ SRC = ROOT / "src"
 SITE = ROOT / "site"
 
 REQUIRED = [
-    "index.html", "404.html", "robots.txt", "_headers", "_redirects",
+    "index.html", "404.html", "robots.txt", "sitemap.xml", "_headers", "_redirects",
     "favicon.svg", "favicon.ico",
     "css/main.css", "js/app.js", "js/data.js",
     "img/case-01.jpg", "img/case-02.jpg", "img/case-03.jpg",
+    "img/case-01-640.webp", "img/case-01-960.webp", "img/case-01-1280.webp", "img/case-01.webp",
+    "img/case-02-640.webp", "img/case-02-960.webp", "img/case-02-1280.webp", "img/case-02.webp",
+    "img/case-03-640.webp", "img/case-03-960.webp", "img/case-03-1280.webp", "img/case-03.webp",
 ]
 
 
@@ -72,6 +75,28 @@ def selfcheck() -> list[str]:
             target = (SITE / u.split("?")[0].split("#")[0])
             if not target.exists():
                 problems.append(f"index.html 引用了不存在的文件：{u}")
+        # srcset 里的每个候选都要真实存在，否则浏览器会整组回落到 src
+        for m in re.finditer(r'srcset="([^"]+)"', h):
+            for cand in m.group(1).split(","):
+                u = cand.strip().split(" ")[0]
+                if not u or u.startswith(("http://", "https://", "data:", "//")):
+                    continue
+                if not (SITE / u).exists():
+                    problems.append(f"index.html 的 srcset 指向不存在的文件：{u}")
+
+    # 6. srcset 引用的变体必须在产物里（render() 运行时才拼 srcset，构建期查不到）
+    data = SITE / "js/data.js"
+    if data.exists():
+        d = data.read_text(encoding="utf-8", newline="")
+        for m in re.finditer(r'"imageSrcset":\s*"([^"]+)"', d):
+            for cand in m.group(1).split(","):
+                u = cand.strip().split(" ")[0]
+                if u and not (SITE / u).exists():
+                    problems.append(f"data.js 的 imageSrcset 指向不存在的文件：{u}")
+        # 7. imageFull 是裁剪与放大的取图源，必须真实存在
+        for m in re.finditer(r'"imageFull":\s*"([^"]+)"', d):
+            if not (SITE / m.group(1)).exists():
+                problems.append(f"data.js 的 imageFull 指向不存在的文件：{m.group(1)}")
 
     app = SITE / "js/app.js"
     if app.exists():

@@ -137,7 +137,11 @@ function check(name, pass, detail) {
   const hasHotspot = await hotspot.count() > 0;
   if (hasHotspot) {
     await hotspot.click({ force: true });
-    await page.waitForTimeout(500);
+    // 裁剪源改为按需加载的全分辨率原图，等它到位再断言，不用固定等待
+    await page.waitForFunction(() => {
+      const s = document.getElementById('zoomPosterCrop').getAttribute('src') || '';
+      return s.startsWith('data:image/');
+    }, { timeout: 20000 }).catch(() => {});
     const cropSrc = await page.locator('#zoomPosterCrop').getAttribute('src');
     const cropLen = (cropSrc || '').length;
     check('V4 展板局部裁剪生成 data URI', cropSrc && cropSrc.startsWith('data:image/'),
