@@ -130,7 +130,12 @@ function record(id, name, pass, detail) {
       const hots = Array.from(document.querySelectorAll('.map-hotspot'));
       if (!hots.length) return { ok: false, why: '无 .map-hotspot', hotCount: 0 };
       hots[0].click();
-      await new Promise((r2) => setTimeout(r2, 600));
+      // 裁剪要先拉全分辨率裁剪源（WebP 200~400KB），跨网耗时随链路而变；
+      // 固定 600ms 窗口会把慢链路误判为失败 —— 改为轮询等裁剪图就位。
+      for (let i = 0; i < 300; i++) {
+        if (/^data:image/.test(c.getAttribute('src') || '')) break;
+        await new Promise((r2) => setTimeout(r2, 100));
+      }
       const dlg = document.getElementById('analysisZoomDialog');
       const after = { src: (c.getAttribute('src') || '').slice(0, 30), nw: c.naturalWidth, isDataUrl: /^data:image/.test(c.getAttribute('src') || '') };
       return {
@@ -239,6 +244,11 @@ function record(id, name, pass, detail) {
   try {
     const r = await page.evaluate(async () => {
       const captured = [];
+      const errs = [];
+      window.addEventListener('error', (e) => errs.push('error: ' + (e.message || '')));
+      window.addEventListener('unhandledrejection', (e) => errs.push('rejection: ' + (e.reason && e.reason.message || e.reason)));
+      const oe = console.error;
+      console.error = (...a) => { errs.push('console.error: ' + a.join(' ')); oe.apply(console, a); };
       const origCreate = URL.createObjectURL;
       URL.createObjectURL = function (blob) {
         if (blob instanceof Blob) captured.push(blob);
@@ -250,18 +260,18 @@ function record(id, name, pass, detail) {
       if (!btn) { URL.createObjectURL = origCreate; HTMLAnchorElement.prototype.click = origDl; return { ok: false, why: '未找到导出按钮' }; }
       btn.click();
       // 导出要内联 3 张全分辨率图（WebP 合计约 1 MB），跨网回源耗时随链路而变。
-      // 轮询等待，最多 30 秒；固定 2 秒窗口会把慢链路误判为失败。
-      for (let i = 0; i < 300 && !captured.length; i++) {
+      // 轮询等待，最多 90 秒；固定 2 秒窗口会把慢链路误判为失败。
+      for (let i = 0; i < 900 && !captured.length; i++) {
         await new Promise((res) => setTimeout(res, 100));
       }
       URL.createObjectURL = origCreate;
       HTMLAnchorElement.prototype.click = origDl;
-      if (!captured.length) return { ok: false, why: '未捕获到 Blob' };
+      if (!captured.length) return { ok: false, why: '未捕获到 Blob（90 秒内）', errs };
       const text = await captured[0].text();
       return { ok: true, size: captured[0].size, len: text.length, html: text };
     });
     if (!r.ok) {
-      record('L8', '导出 HTML 可独立打开', false, r.why);
+      record('L8', '导出 HTML 可独立打开', false, r.why + (r.errs && r.errs.length ? ' | 页面报错: ' + r.errs.slice(0, 3).join(' ; ') : ''));
     } else {
       const tmp = path.join(process.env.TEMP || '.', 'export_check.html');
       fs.writeFileSync(tmp, r.html, 'utf8');
