@@ -33,8 +33,10 @@ boya-museum-site/
 │   ├── make_favicon.py    生成图标
 │   ├── make_platform_files.py  生成 _headers / _redirects
 │   ├── verify.js          功能验证（真实 Chromium）
-│   ├── verify_viewports.js 多视口验证
+│   ├── verify_viewports.js 多视口验证（与原单文件几何比对）
 │   ├── verify_live.js     公网验收（打线上地址，9 项）
+│   ├── verify_crop_fidelity.js 裁剪画质门禁（裁剪源同尺寸 / 宽高比 / PSNR）
+│   ├── audit_contrast.js  全状态对比度审计（3 案例 × 9 态，含伪元素）
 │   ├── verify_domain.js   自有域名验收（7 项，绑完域名后跑）
 │   ├── verify_domain.selftest.js 域名验收脚本的纯逻辑自检（13 项）
 │   ├── bind_domain.py     域名绑定自动化（CF API；默认演练，--apply 才写云端）
@@ -127,6 +129,12 @@ node tools/verify_a11y_seo.js
 # 图片与导出件（25 项：各视口实际选中的变体 / 导出件内联与独立打开）
 node tools/verify_images.js
 
+# 全状态对比度审计（3 案例 × 9 态：弹层 / 编辑抽屉 / 自查清单，含伪元素）
+node tools/audit_contrast.js
+
+# 裁剪画质门禁（9 项：裁剪源与源图同尺寸 / 宽高比偏差 / 各热点区域 PSNR）
+node tools/verify_crop_fidelity.js
+
 # 与原始单文件逐案例正文比对（可选，需桌面原文件存在）
 node tools/verify.js --compare "C:/Users/EDY/Desktop/博雅博物馆_优秀案例解读_点击放大互动版_2026-11-02.html"
 
@@ -146,7 +154,7 @@ python tools/compare_visual.py .snap/before .snap/after --noise .snap/after2
 >
 > **持续更新、迭代、回退的完整方案见 [`docs/ITERATION-GUIDE.md`](docs/ITERATION-GUIDE.md)。**
 
-部署前请确保五个 `verify_*.js` 脚本都是 **0 FAIL**。
+部署前请确保 `verify*.js` 七个脚本与 `audit_contrast.js` 都是 **0 FAIL**（共 111 项）。
 
 ---
 

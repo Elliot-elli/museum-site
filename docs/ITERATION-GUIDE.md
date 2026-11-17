@@ -447,8 +447,44 @@ git push origin main
 ### 9.2 图片
 
 - 变体档位固定为 **640 / 960 / 1280 + 原宽**。改档位要同步 `tools/make_webp.py` 的 `WIDTHS` 与 `data.js` 的 `imageSrcset`。
-- **裁剪源是全分辨率原图**（`cases[i].image`），不是屏幕上那张缩略版 —— 展板小字要看得清。
+- **裁剪源是全分辨率原图**（`cases[i].imageFull`，指向原宽 WebP 变体），不是屏幕上那张缩略版 —— 展板小字要看得清。
 - 导出件靠 `inlineAssets` 把图片转成 data URI；`srcset` 一律剥离，否则导出件里是坏图。
+- 🔴 **图片的布局比例必须锁到源图宽高比**，不能跟着变体的宽高比走。
+  变体高度是取整的（640 宽的变体高 540，源图是 1604/1900），比例差 0.05%，
+  350px 宽处就是 0.16px 差，累积后会让「与原单文件几何一致」判据在 390/360 视口差 1px 而 FAIL。
+  做法：render() 在 `<article>` 上写 `--ar:${c.imageW}/${c.imageH}`，
+  CSS 里 `.photo img` 与 `.poster-map-image img` 用 `aspect-ratio:var(--ar)`。
+  判据：`node tools/verify_viewports.js` 必须 25/25。
+
+### 9.6 裁剪画质
+
+裁剪源换成压缩格式后，压缩痕迹直接落在展板小字上 —— 肉眼难分辨，必须用数值守住：
+
+```bash
+node tools/verify_crop_fidelity.js          # 9 项判据
+node tools/verify_crop_fidelity.js --dump   # 额外导出区域对比图到 .snap/
+```
+
+判据三条：裁剪源与源 JPEG **像素尺寸完全一致**（否则百分比坐标会算错）、
+宽高比偏差 **< 0.1%**、每个热点区域 **PSNR ≥ 33 dB**（当前实测 35.5~37.6 dB）。
+
+### 9.7 对比度
+
+`verify_a11y_seo.js` 的 A1 只看首屏默认态，**弹层里的文字不在其中**。
+全量审计用：
+
+```bash
+node tools/audit_contrast.js
+```
+
+覆盖 3 个案例 × 9 种交互态（含展板放大弹层、原图查看弹层、编辑抽屉、自查清单），
+并把 `::before / ::after` 生成的内容也计入。当前结果：68 条唯一前景色，0 处不达标。
+
+### 9.8 公网验收的等待窗口
+
+跨网回源时**固定等待窗口会误判为失败**：裁剪要先拉 200~400KB 裁剪源，
+导出会内联约 1MB 图片，慢链路上固定 600ms / 2 秒窗口必然超时。
+验收脚本里凡是"等某个东西出现"的地方，一律改成**轮询到就位**，并给出上限。
 
 ### 9.3 CSS
 
@@ -464,6 +500,8 @@ git push origin main
 | `tools/verify_features.js` | 15 | 改了 app.js / index.html 的交互 |
 | `tools/verify_a11y_seo.js` | 21 | 改了 CSS 颜色、head 元数据、页面结构 |
 | `tools/verify_images.js` | 25 | 改了图片相关代码 |
+| `tools/audit_contrast.js` | 68 前景色 | 改了任何颜色或新增了弹层 |
+| `tools/verify_crop_fidelity.js` | 9 | 改了裁剪源或重新生成了 WebP 变体 |
 | `tools/capture_visual.js` + `tools/compare_visual.py` | 17 张截图 | 改了 CSS |
 
 ### 9.5 新增铁律
