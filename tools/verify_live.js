@@ -249,7 +249,11 @@ function record(id, name, pass, detail) {
       const btn = Array.from(document.querySelectorAll('button')).find((b) => /导出新版|导出\s*HTML|导出/.test(b.textContent));
       if (!btn) { URL.createObjectURL = origCreate; HTMLAnchorElement.prototype.click = origDl; return { ok: false, why: '未找到导出按钮' }; }
       btn.click();
-      await new Promise((res) => setTimeout(res, 2000));
+      // 导出要内联 3 张全分辨率图（WebP 合计约 1 MB），跨网回源耗时随链路而变。
+      // 轮询等待，最多 30 秒；固定 2 秒窗口会把慢链路误判为失败。
+      for (let i = 0; i < 300 && !captured.length; i++) {
+        await new Promise((res) => setTimeout(res, 100));
+      }
       URL.createObjectURL = origCreate;
       HTMLAnchorElement.prototype.click = origDl;
       if (!captured.length) return { ok: false, why: '未捕获到 Blob' };

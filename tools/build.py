@@ -93,6 +93,10 @@ def selfcheck() -> list[str]:
                 u = cand.strip().split(" ")[0]
                 if u and not (SITE / u).exists():
                     problems.append(f"data.js 的 imageSrcset 指向不存在的文件：{u}")
+        # 7. imageFull 是裁剪与放大的取图源，必须真实存在
+        for m in re.finditer(r'"imageFull":\s*"([^"]+)"', d):
+            if not (SITE / m.group(1)).exists():
+                problems.append(f"data.js 的 imageFull 指向不存在的文件：{m.group(1)}")
 
     app = SITE / "js/app.js"
     if app.exists():
